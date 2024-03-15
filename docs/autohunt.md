@@ -34,7 +34,7 @@ On successful login, the session cookie is printed to the console. For stealth, 
 * Miss probability: The probability of missing a horn
 * Randomness: The length in seconds of the interval from which the waiting time will be randomly chosen
 
-These parameters have default values of 15 mins, 300 secs, and .15 respectively. If run with these values, autohunt waits 15-20 mins between horns and misses the horn 15% of the time. These can be overwritten with the -i, -m, and -r options. You could also modify the first few lines of the script to change the default values. The term 'miss' refers to not sounding the horn, which has nothing to do with your catch rate in the game. 
+These parameters have default values of 15 mins, .15, and 300 secs respectively. If run with these values, autohunt waits 15-20 mins between horns and misses the horn 15% of the time. These can be overwritten with the -i, -m, and -r options. You could also modify the first few lines of the script to change the default values. The term 'miss' refers to not sounding the horn, which has nothing to do with your catch rate in the game. 
 
 **Profiles.** There are preloaded sets of non-default values for convenience. The -A option puts autohunt in aggressive mode, in which the horn sounds roughly every 15 mins without missing. -P puts autohunt in paranoid mode, in which it waits half to one hour between horns and misses 20% of the time. I use -A during non-business waking hours and events, and -P when going overnight. If one of these profiles is used in conjunction with -i, -m, or -r, the profile values are taken as default and overwritten by the explicit values. 
 
