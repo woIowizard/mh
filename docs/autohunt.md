@@ -1,5 +1,5 @@
 # autohunt
-This script automates some aspects of MH. Its key functions are sounding the horn, detecting and bypassing MH's antibot controls, and navigating some quests and areas automatically.
+Autohunt's key functions are sounding the horn, detecting and bypassing MH's antibot controls, and navigating some quests and areas automatically.
 * [getting started](#basic)
 * [parameters](#params)
 * [antibot](#antibot)
