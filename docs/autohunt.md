@@ -18,7 +18,7 @@ Change the first three lines of the script to include either a valid username-pa
 
 ![autohunt-basic](../img/autohunt-basic.png)
 
-On successful login, the session cookie is printed to the console. For stealth, it's advisable to save the cookie value in the script so that the script logs in using the cookie next time instead of a password--the former is more similar to non-bot behaviour.
+On successful login, the session cookie is printed to the console. For stealth, it's advisable to save the cookie value in the script so that the script logs in using the cookie instead of a password--the former is more similar to non-bot behaviour.
 
 
 <hr>
