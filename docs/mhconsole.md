@@ -1,9 +1,6 @@
 # mhconsole
-Mhconsole is intended to be a companion script to autohunt. It creates a CLI for interacting with the game so that while autohunt is running, things like travelling and crafting can be done without accessing the game in-browser. To get started, see the section on logging in below. From an authenticated session, run `help` to list available functions.
-
-![mhconsole-help](../img/mhconsole-help.png)
-
-* [logging in](#login)
+Mhconsole is intended to be a companion script to autohunt. It creates a CLI for interacting with the game so that while autohunt is running, things like travelling and crafting can be done without accessing the game in-browser. 
+* [getting started](#login)
 * [general commands](#general)
 * [travelling](#move)
 * [trap setup](#arm)
@@ -37,8 +34,11 @@ To save the login and skip authentication in future, edit the first three lines 
 <a name="general"></a> 
 
 ### General commands
+From an authenticated session, run `help` to list available functions.
 
-From an authenticated session, `info` shows information about the horn status, trap setup, and login info.
+![mhconsole-help](../img/mhconsole-help.png)
+
+`info` shows information about the horn status, trap setup, and login info.
 
 ![mhconsole-info](../img/mhconsole-info.png)
 
