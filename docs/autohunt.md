@@ -34,7 +34,7 @@ On successful login, the session cookie is printed to the console. For stealth, 
 * Miss probability: The probability of missing a horn
 * Randomness: The length in seconds of the interval from which the waiting time will be randomly chosen
 
-These parameters have default values of 15 mins, .15, and 300 secs respectively. If run with these values, autohunt waits 15-20 mins between horns and misses the horn 15% of the time. These can be overwritten with the -i, -m, and -r options. You could also modify the first few lines of the script to change the default values. The term 'miss' refers to not sounding the horn, which has nothing to do with your catch rate in the game. 
+These parameters have default values of 15 mins, .15, and 300 secs respectively. If run with these values, autohunt waits 15-20 mins between horns and misses the horn 15% of the time. The default value can be overwritten with the -i, -m, and -r options. You could also modify the first few lines of the script to change the default values permanently. The term 'miss' here refers to not sounding the horn, which has nothing to do with your catch rate in the game. 
 
 **Profiles.** There are preloaded sets of non-default values for convenience. The -A option puts autohunt in aggressive mode, in which the horn sounds roughly every 15 mins without missing. -P puts autohunt in paranoid mode, in which it waits half to one hour between horns and misses 20% of the time. I use -A during non-business waking hours and events, and -P when going overnight. If one of these profiles is used in conjunction with -i, -m, or -r, the profile values are taken as default and overwritten by the explicit values. 
 
@@ -72,7 +72,7 @@ You can run autohunt in silent mode with -S, in which everything is as in standa
 
 If you notice that KR is active, you can resolve it in-browser or using mhconsole. If you do either, autohunt will still report KR as active--this is to avoid refreshing the page while KR is active. 
 
-**Auto-solve.** If antibot is triggered in auto-solve mode, autohunt sends the KR image to [OCR API](https://ocr.space/ocrapi), attempts to recognise the characters automatically. To use this mode, set the -o option with the value of your API key. It works about 50% of the time.
+**Auto-solve.** If antibot is triggered in auto-solve mode, autohunt sends the KR image to [OCR API](https://ocr.space/ocrapi), which attempts to recognise the characters automatically. To use this mode, pass the value of your API key via the -o option. The OCR works about 50% of the time.
 
 
 <hr>
@@ -117,17 +117,17 @@ The -C and -z options allow autohunt to take actions according to the requiremen
 
 **fiery.** Go through the warpath. If an integer option is set, autohunt goes for the commander when the streak is above that number; otherwise it never goes for the commander. If the option g is set, autohunt goes for gargantua at streak 6, otherwise it goes at streak 8. Autohunt automatically crafts mage and calvary charms; the option c disables that.
 
-**fort.** Go through fort rox. Autohunt uses law traps in the day, shadow traps in the first two stages of night, and arcane traps otherwise. It uses moon cheese if the option m is set it's available, otherwise it uses crescent cheese if its available, otherwise it uses gouda. By default autohunt never uses the tower, with the option t it uses the tower when the hp isn't max.
+**fort.** Go through fort rox. Autohunt uses law traps in the day, shadow traps in the first two stages of night, and arcane traps otherwise. It uses moon cheese if the option m is set and moon cheese is available, otherwise it uses crescent cheese if that's available, otherwise it uses gouda. By default autohunt never uses the tower, with the option t it uses the tower when the hp isn't max.
 
 **garden.** Autohunt goes through the stages of the living garden in this order: garden, dunes/crypts, city, garden. If the option c is set, it doesn't go beyond the city; if d is set it doesn't go beyond the dunes.
 
-**fungal.** Autohunt crafts and uses cheese in this order of decreasing priority: diamond, gemstone, mineral, glowing gruyere, gouda. If the option g is set, glowing gruyere isn't used. If b is set, autohunt aims to collect materials for the crystal crucible.
+**fungal.** Autohunt crafts and uses cheese in fungal cavern, in this order of decreasing priority: diamond, gemstone, mineral, glowing gruyere, gouda. If the option g is set, glowing gruyere isn't used. If b is set, autohunt aims to collect materials for the crystal crucible.
 
-**grift.** Autohunt crafts and uses cheese in this order of decreasing priority: resonator, riftiago, brie string. If the option r is set it doesn't use resonator. If b is set, the rift trap materials are saved when crafting cheese.
+**grift.** Autohunt crafts and uses cheese in gnawnia rift, in this order of decreasing priority: resonator, riftiago, brie string. If the option r is set it doesn't use resonator. If b is set, the rift trap materials are saved when crafting cheese.
 
-**brift.** Autohunt farms 100 canisters, then aims to maintain mist in the red zone as long as possible. If the option g is set it stays in the green zone. If b is set it uses brie string in the red zone to go for monstrous abomination, if t is set it uses terre ricotta to go for behemoth.
+**brift.** In burroughs rift, autohunt farms 100 canisters, then aims to maintain mist in the red zone as long as possible. If the option g is set it stays in the green zone. If b is set it uses brie string in the red zone to go for monstrous abomination, if t is set it uses terre ricotta to go for behemoth.
 
-**frift.** Farm enerchi then go into the pagoda. If the option c is set, enerchi charm is used to farm. If an integer is set that number of onyx stone is kept; everything else is used to craft onyx cheese. Autohunt goes for supreme sensei at battery 10, grandmaster at battery 9, masters at battery 7, and students otherwise.
+**frift.** In furoma rift, autohunt farms enerchi then go into the pagoda. If the option c is set, enerchi charm is used to farm. If an integer is set that number of onyx stone is kept; everything else is used to craft onyx cheese. Autohunt goes for supreme sensei at battery 10, grandmaster at battery 9, masters at battery 7, and students otherwise.
 
 **bwrift.** Go through rooms in the bristle woods rift in this order of decreasing preference: treasury, lucky chamber, guard chamber, silence chamber, pursuer chamber, icy chamber, acolyte (with enough sand), ingress, icebreak, timewarp with enough runic string, potion, runic, gearworks. Autohunt aims for 110 sand with no curses and boosts, 20 less sand per boost, and 50 sand with both boosts and enough QQ. QQ is usually used only in the boost rooms, but if the option q is set it's also used in normal rooms.
 
@@ -135,12 +135,12 @@ The -C and -z options allow autohunt to take actions according to the requiremen
 
 **queso.** Go through the queso area. By default, autohunt prioritises eruptions, using mild queso for tiny and small eruptions, medium queso for medium eruptions, and hot queso for large eruptions (handle epic eruptions manually). The options b, m, e, h, or f set the target to some other kind of queso. If the k option is set, autohunt stays at PP to farm the target queso. If q or p is set the target queso is used at CQ or PP respectively. If u is set, the pump is automatically upgraded if there's enough nachore.
 
-**mp.** If the options w, r, and d are not set, autohunt farms potions with basic bait. Glowing gruyere isn't used unless g is set. If w or r is set, autohunt aims for the wind or rain side. If d is set, autohunt crafts dragonvine and aims for dragons. The SB formula isn't used unless the s option is set. If f is set, fire bowl fuel is used when the meters are not at max.
+**mp.** Solve moussu picchu quest. If the options w, r, and d are not set, autohunt farms potions with basic bait. Glowing gruyere isn't used unless g is set. If w or r is set, autohunt aims for the wind or rain side. If d is set, autohunt crafts dragonvine and aims for dragons. The SB formula isn't used unless the s option is set. If f is set, fire bowl fuel is used when the meters are not at max.
 
-**bb.** At the vine, autohunt plants medium vines if you have enough fertiliser, otherwise short vines if you have enough for that, otherwise it stays at the vine. Medium vines aren't planted if the option l is set, and no vine is planted if the option g is set. Handle tall vines manually. In the short and medium castles, autohunt farms resources using lavish cheese in ultimate rooms and gouda cheese in other rooms. The option r makes autohunt use the R1R strategy, in which leaping lavish is used and the harp is played to awaken the giant in the first room. In the tall castle, leaping lavish is used until an ultimate room, in which royal cheese is used. CC and harps in the tall castle are handled manually.
+**bb.** Go through bountiful beanstalk. At the vine, autohunt plants medium vines if you have enough fertiliser, otherwise short vines if you have enough for that, otherwise it stays at the vine. Medium vines aren't planted if the option l is set, and no vine is planted if the option g is set. Handle tall vines manually. In the short and medium castles, autohunt farms resources using beanster cheese in ultimate rooms and gouda cheese in other rooms. The option r makes autohunt use the R1R strategy, in which leaping lavish is used and the harp is played to awaken the giant in the first room. In the tall castle, leaping lavish is used until an ultimate room, in which royal cheese is used. CC and harps in the tall castle are handled manually.
 
-**lny.** Use gouda to farm dumplings, then use dumplings to farm candles.
+**lny.** During lunar new year event, use gouda to farm dumplings, then use dumplings to farm candles.
 
-**halloween.** Use the highest tier cheese available, but if the option b is set bonefort isn't used. Brew the highest cheese available, but if the option r is set mousedrake root isn't brewed. Auto-claim rewards.
+**halloween.** Go through halloween area. Use the highest tier cheese available, but if the option b is set bonefort isn't used. Brew the highest tier cheese available, but if the option r is set mousedrake root isn't brewed. Auto-claim rewards.
 
-**bday.** Speedy coggy colby is used if available and the option s is set, otherwise coggy colby if available, otherwise gouda. The option g forces gouda and h forces SB. Factory repair charm isn't used unless c is set and the standard bait is used. The options m, b, p, or q makes autohunt move to the respective room. If t is set and a map is active, autohunt moves between rooms to solve the map.
+**bday.** Go through birthday area. Speedy coggy colby is used if available and the option s is set, otherwise coggy colby if available, otherwise gouda. The option g forces gouda and h forces SB. Factory repair charm isn't used unless c is set and the standard bait is used. The options m, b, p, or q makes autohunt move to the respective room. If t is set and a map is active, autohunt moves between rooms to solve the map.
