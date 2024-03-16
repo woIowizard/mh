@@ -63,7 +63,7 @@ Hence it is possible to reset an account password without access to the recovery
 
 ### Remediation
 
-9 Mar 2024&emsp; reported to MH support<br>
+9 Mar 2024&emsp; reported<br>
 11 Mar 2024&emsp;remediated<br>
 16 Mar 2024&emsp;disclosure
 
