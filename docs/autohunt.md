@@ -74,7 +74,7 @@ If you notice that KR is active, you can resolve it in-browser or using mhconsol
 
 **Auto-solve.** If antibot is triggered in auto-solve mode, autohunt sends the KR image to [OCR API](https://ocr.space/ocrapi), which attempts to recognise the characters automatically. To use this mode, pass the value of your API key via the -o option. The OCR works about 50% of the time.
 
-![autohunt-antibot-ocr](../img/autohunt-antibot-ocr.png)
+![autohunt-antibot-ocr](../img/autohunt-antibot-ocr.jpg)
 
 
 <hr>
