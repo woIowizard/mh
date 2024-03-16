@@ -15,7 +15,7 @@ Mhconsole is intended to be a companion script to autohunt. It creates a CLI for
 
 ### Logging in
 
-Run mhconsole without any arguments to get started. The prompt `mh [not logged in] >` appears indicates that the session is unauthenticated. Run `help` to see available commands:
+Run mhconsole without any arguments to get started. The prompt `mh [not logged in] >` appears indicating that the session is unauthenticated. Run `help` to see available commands:
 
 ![mhconsole-unauth-help](../img/mhconsole-unauth-help.png)
 
@@ -23,7 +23,7 @@ Two ways to login: either a username-password combination or an active session c
 
 ![mhconsole-login](../img/mhconsole-login.png)
 
-To save the login and skip authentication in future, edit the first three lines of the script to insert either a username-password combination or an active session cookie.
+To skip authentication in future, edit the first three lines of the script to insert either a username-password combination or an active session cookie.
 
 ![mhconsole-direct-login](../img/mhconsole-direct-login.png)
 
@@ -42,7 +42,7 @@ From an authenticated session, run `help` to list available functions.
 
 ![mhconsole-info](../img/mhconsole-info.png)
 
-`horn` and `sleep` are regarding the horn. If the horn is ready, `horn` sounds it. If the horn is not ready, `sleep` suspends mhconsole until it is. This is meant to be an offline indicator that the horn is ready without automatically sounding the horn--useful when the internet connection is intermittent. Mhconsole's functions aren't affected by antibot--it essentially uses the bypass mode of autohunt.
+`horn` and `sleep` pertain to the horn. If the horn is ready, `horn` sounds it. If the horn is not ready, `sleep` suspends mhconsole until it is. This is meant to be an offline indicator that the horn is ready that does not automatically sound the horn--useful when the internet connection is intermittent. Mhconsole's functions aren't affected by antibot--it essentially uses the bypass mode of autohunt.
 
 ![mhconsole-horn](../img/mhconsole-horn.png)
 
@@ -76,7 +76,7 @@ Commands beginning with `arm` concern the trap setup. `arm` lists all the availa
 
 ![mhconsole-arm-list](../img/mhconsole-arm-list.png)
 
-`arm best` lists the highest-powered trap of each trap type.
+`arm best` lists the highest-powered trap of each trap type in inventory.
 
 ![mhconsole-arm-best](../img/mhconsole-arm-best.png)
 
@@ -106,7 +106,7 @@ To buy something from the stores, use `buy [item] [qty]`, where `[item]` is eith
 
 ![mhconsole-craft-list](../img/mhconsole-craft-list.png)
 
-To craft items, use `add [item] [qty]` to add a crafting item to the crafting table, where `[item]` is the serial number (according to `list`) or name of the item to add, and `[qty]` is the quantity of that item to add. `show` displays the crafting table, `del` followed by a serial number removes one item from the crafting table, and `reset` empties the table. `run` attempts to craft the item on the table. If followed by an integer, the crafting is repeated that number of times.
+To craft items, use `add [item] [qty]` to add a crafting item to the crafting table, where `[item]` is the serial number (according to `list`) or name of the item to add, and `[qty]` is the quantity of that item to add. `show` displays the crafting table, `del` followed by a serial number removes one item from the crafting table, and `reset` empties the table. `run` attempts to craft the items on the table. If followed by an integer, the crafting is repeated that number of times.
 
 ![mhconsole-craft-run](../img/mhconsole-craft-run.png)
 
@@ -144,11 +144,11 @@ To refresh the orders for a marketplace item regularly, use `mp w` (for 'watch')
 
 ![mhconsole-mp-watch](../img/mhconsole-mp-watch.png)
 
-To create a marketplace listing, use `mp`, followed by either `b` or `s` (corresponding to buy/sell), followed by the id of the target item, followed by the desired unit price of the listing, followed by the quantity. If the unit price is set to 0, it is either 1 less than the lowest sell price or 1 more than the highest buy prices (as the case maybe). If it's set to -1, the item is either sold at the highest buy price or bought at the lowest sell price. If the quantity is set to 0 (only for sell listings), all of that item on hand are sold.
+To create a marketplace listing, use `mp`, followed by either `b` or `s` (corresponding to buy/sell), followed by the id of the target item, followed by the desired unit price of the listing, followed by the quantity. If the unit price is set to 0, it is either 1 less than the lowest sell price or 1 more than the highest buy prices (as the case may be). If it's set to -1, the item is either sold at the highest buy price or bought at the lowest sell price. If the quantity is set to 0 (only for sell listings), all of that item on hand are sold.
 
 ![mhconsole-mp-create](../img/mhconsole-mp-create.png)
 
-In the section listing own listings, a \* beside the price indicates that the sell price is not lowest or the buy price is not highest. A (!) indicates that the sell price is lower than 1 less than the lowest sell price or the buy price is greater than 1 more than the highest buy price. Listings with a \* take longer to close, and listings with a (!) are not optimally protective.
+In the section listing own listings, a \* beside the price indicates that the sell price is not lowest or the buy price is not highest. A (!) indicates that the sell price is lower than 1 less than the lowest sell price or the buy price is greater than 1 more than the highest buy price. Listings with a \* take longer to close, and listings with a (!) are not optimally profitable.
 
 If a listing is ready to claim, `mp c` followed by the listing ID (or serial number) claims that listing. `mp c _` claims all available listings.
 
