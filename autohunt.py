@@ -10,14 +10,15 @@ miss_chance = .15
 
 
 ########## CODE BEGINS HERE ##########
-import requests,time,random,datetime,json,re,argparse,subprocess,functools,base64
+import time,random,datetime,json,re,argparse,subprocess,functools,base64,cloudscraper
 max_fail,timeout = 3,30
 
+requests = cloudscraper.create_scraper()
 requests.get = functools.partial(requests.get,timeout=timeout)
 requests.post = functools.partial(requests.post,timeout=timeout)
 
 ##### ARGUMENT HANDLING #####
-defined_cycles = ['gnawnia','windmill','harbour','mountain','mousoleum','tree','furoma','burglar','digby','toxic','gauntlet','tribal','iceberg','zzt','city','train','fiery','fort','garden','grift','brift','frift','bwrift','vrift','fungal','queso','mp','bb','halloween','lny','bday']
+defined_cycles = ['gnawnia','windmill','harbour','mountain','mousoleum','tree','furoma','burglar','digby','toxic','gauntlet','tribal','iceberg','zzt','city','train','fiery','fort','garden','grift','brift','frift','bwrift','vrift','fungal','queso','mp','bb','sos','halloween','lny','bday']
 
 p = argparse.ArgumentParser()
 p.add_argument('-i',help='horn interval in mins (default %s)'%interval)
@@ -52,6 +53,7 @@ if args.C == 'list':
     ('','','dragon: access to dracano + draconic trap',[('d','dragon')]),
     ('','','horde: access to jungle + shadow trap',[('h','horde')]),
     ('','','chieftian: access to isles + physical/tactical/hydro traps',[('c','chieftians')]),
+    ('','','',[('e','hammer dragon embers for fire salt')]),
     ('city','claw shot city quest','access to claw shot city + law trap','None'),
     ('train','train quest','ongoing train quest + law trap',[('s','smuggle items instead of submitting'),('f','don\'t spend fools gold')]),
     ('fort','trap setup for fort rox','access to fort rox + law/shadow/arcane traps',[('m','use moon cheese at night if available'),('t','use tower before dawn if hp is not max')]),
@@ -63,6 +65,7 @@ if args.C == 'list':
     ('fungal','fungal cavern quest','access to fungal cavern + hydro/forgotten traps',[('g','farm glowing gruyere'),('b','keep materials for crystal crucible')]),
     ('mp','moussu picchu','access to moussu picchu + shadow/arcane/draconic traps',[('w','aim for wind'),('r','aim for rain'),('d','aim for dragons'),('s','use SB formula for dragonvine'),('g','use GG when not aiming'),('f','use fbf for dragons when not max')]),
     ('bb','bountiful beanstalk quest','access to bountiful beanstalk + physical trap',[('r','r1r instead of farming'),('g','don\'t plant vine'),('l','prioritise farming lavish')]),
+    ('sos','school of sorcery','access to school of sorcery',[('c','always use cc'),('a/s','choose arcane/shadow course'),('m/b','use MM/AA cheese'),('f','sustainable farming')]),
     ('grift','gnawnia rift quest','access to gnawnia rift',[('b','keep 10 seed, grass, and dust'),('r','don\'t use resonator')]),
     ('brift','burroughs rift quest','access to burroughs rift + rift trap',[('t','go for behemoth burroughs'),('b','go for monstrous abomination'),('g','stay in green zone')]),
     ('frift','furoma rift cycle','access to furoma rift + rift trap',[('integer','number of onyx stone to keep'),('c','use enerchi charm outside')]),
@@ -90,7 +93,7 @@ cycle = args.C if args.C in defined_cycles else ''
 args.z = args.z if args.z else ''
 antibot_mode = 'silent' if args.s else 'bypass' if args.b or args.a else 'auto-solve' if args.o else 'standard'
 
-useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0' if args.ua == 'firefox' or not args.ua else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.3' if args.ua == 'chrome' else 'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15' if args.ua == 'mac' else 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Mobile/15E148 Safari/604.1' if args.ua == 'iphone' else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36 Edge/100.0.1185.39' if args.ua == 'edge' else args.ua
+useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0' if args.ua == 'firefox' or not args.ua else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.3' if args.ua == 'chrome' else 'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15' if args.ua == 'mac' else 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Mobile/15E148 Safari/604.1' if args.ua == 'iphone' else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36 Edge/100.0.1185.39' if args.ua == 'edge' else args.ua
 
 print('[%s] starting autohunt. %sinterval: %s, miss_prob: %s, randomness: %s, antibot: %s'%(datetime.datetime.now().replace(microsecond=0),'minimal mode. ' if args.a else 'cycle: %s, '%(cycle if cycle else 'none'),interval,miss_chance,randomness,antibot_mode))
 
@@ -111,7 +114,7 @@ try: username,password = username,password
 except: username,password = '',''
 hash,horns,antibot_triggered,allowed_regions,lpt,user_id,lrje = '',0,0,[],0,'',0
 post_headers = {'Accept': 'application/json, text/javascript, */*; q=0.01', 'Accept-Language': 'en-GB,en;q=0.5', 'Connection': 'keep-alive', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Sec-Fetch-Dest': 'empty', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Site': 'same-origin', 'TE': 'trailers', 'User-Agent':useragent}
-get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8', 'Accept-Language': 'en-GB,en;q=0.5', 'Connection': 'keep-alive', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'none', 'Sec-Fetch-User': '1', 'TE': 'trailers', 'Upgrade-Insecure-Requests': '1', 'User-Agent':useragent}
+get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8', 'Accept-Language': 'en-GB,en;q=0.5', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'none', 'Sec-Fetch-User': '1', 'TE': 'trailers', 'Upgrade-Insecure-Requests': '1', 'User-Agent':useragent}
 api_headers = {'Accept': 'application/json, text/javascript, */*; q=0.01', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'file://', 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'}
 cookies = {'HG_TOKEN':cookie}
 
@@ -146,6 +149,7 @@ def choose_cycle():
     elif cycle == 'queso': queso()
     elif cycle == 'mp': mp()
     elif cycle == 'bb': bb()
+    elif cycle == 'sos': sos()
     elif cycle == 'bwrift': bwrift()
     elif cycle == 'vrift': vrift()
     elif cycle == 'halloween': halloween()
@@ -536,7 +540,7 @@ def tribal(loop_counter=0):
             requests.post('https://www.mousehuntgame.com/managers/ajax/users/useconvertible.php',{'item_type':'white_pepper_plant_convertible','uh':hash,'item_qty':num},cookies=cookies,headers=post_headers)
         else: done,seeds_num = 1,1
     elif ('fire_salt_craft_item' not in crafts or crafts['fire_salt_craft_item'] < 6 or 'h' in args.z) and 'c' not in args.z and 'Shadow' in best_weapons and 'jungle_of_dread' in allowed_regions:
-        if 'e' not in args.z and 'dragon_ember' in crafts and 'h' not in args.z: hammer('dragon_ember',crafts['dragon_ember'])
+        if 'e' in args.z and 'dragon_ember' in crafts and 'h' not in args.z: hammer('dragon_ember',crafts['dragon_ember'])
         for havarti in ['spicy_havarti_cheese','magical_havarti_cheese','sweet_havarti_cheese','crunchy_havarti_cheese','creamy_havarti_cheese','pungent_havarti_cheese']:
             if havarti in baits: 
                 target_location, target_bait, target_weapon, target_item = 'jungle_of_dread',havarti,best_weapons['Shadow'],'fire_salt_craft_item'
@@ -946,7 +950,7 @@ def fiery(loop_counter=0):
     elif level == 4: target,target_trinket,target_weapon = 'desert_elite_gaurd' if 'desert_elite_gaurd' in mice else 'desert_boss',None,best_weapons['Physical']
     else: 
         d = {1: ['desert_warrior_weak','desert_scout_weak','desert_archer_weak'], 2: ['desert_warrior','desert_scout','desert_archer','desert_mage','desert_cavalry'], 3: ['desert_warrior_epic','desert_scout_epic','desert_archer_epic','desert_mage_strong','desert_cavalry_strong','desert_artillery']}
-        for m in d[level]:
+        for m in [j['user']['viewing_atts']['desert_warpath']['streak_type']]+d[level]:
             if m in mice and mice[m]:
                 type = m.split('_')[1]
                 target,target_trinket,target_weapon = m,'super_flame_march_%s_trinket'%(type) if 'super_flame_march_%s_trinket'%(type) in trinkets else 'flame_march_%s_trinket'%(type),best_weapons['Tactical'] if type=='cavalry' else best_weapons['Hydro'] if type=='mage' else best_weapons['Arcane'] if type=='artillery' else best_weapons['Physical']; break
@@ -1121,8 +1125,9 @@ def grift(loop_counter=0):
         travel('rift_gnawnia')
         current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
     
-    rift_bases = [c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']]
-    if rift_bases: best_base = max(rift_bases,key=lambda x:x['power'] if 'power' in x else 0)['type']
+    
+    try: best_base = max((c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']),key=lambda x:x['power'] if 'power' in x else 0)['type']
+    except: pass
     if current_base != best_base: arm_base(best_base)
     target_weapon = best_weapons['Rift'] if 'Rift' in best_weapons else best_weapon
     if current_weapon != target_weapon: arm_weapon(target_weapon)
@@ -1219,7 +1224,8 @@ def brift():
     
     mist_level,canisters,misting,circuits = j['user']['quests']['QuestRiftBurroughs']['mist_released'],stats['mist_canister_stat_item'],bool(j['user']['quests']['QuestRiftBurroughs']['is_misting']),stats['rift_circuitry_stat_item'] if 'rift_circuitry_stat_item' in stats else 0
     
-    best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    try: best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    except: pass
     
     if 'terre_ricotta_potion' in potions:
         buy('brie_string_cheese',potions['terre_ricotta_potion'])
@@ -1265,7 +1271,8 @@ def frift(loop_counter=0):
         travel('rift_furoma')
         current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
     
-    best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    try: best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    except: pass
     
     bml = sum(1 for c in j['user']['quests']['QuestRiftFuroma']['batteries'].values() if c['status'].split()[0] == 'unlocked')
     bcl = sum(1 for c in j['user']['quests']['QuestRiftFuroma']['batteries'].values() if c['status'].split()[0] == 'unlocked' and c['remaining'])
@@ -1350,7 +1357,8 @@ def bwrift(loop_counter=0):
         current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
     
     if current_weapon != best_weapons['Rift']: arm_weapon(best_weapons['Rift'])
-    best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    try: best_base = max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
+    except: pass
     if current_base != best_base: arm_base(best_base)
     if 'brie_string_cheese' not in baits or baits['brie_string_cheese'] <= 100: buy('brie_string_cheese',100)
     if 'rift_vacuum_trinket' not in trinkets or trinkets['rift_vacuum_trinket'] <= 10: buy('rift_vacuum_trinket',100)
@@ -1443,40 +1451,43 @@ def vrift():
     best_base = 'valour_rift_prestige_base' if 'valour_rift_prestige_base' in bases else max([c for c in j['components'] if c['classification']=='base' and 'tag_types' in c and 'rift' in c['tag_types']],key=lambda x:x['power'] if 'power' in x else 0)['type']
     if current_base != best_base: arm_base(best_base)
     
-    # if haven't started, start
-    def gs(n): return 20+((n-1)//8)*10 if n%8 else 1
-    def gf(n): 
-        i,s = 1,0
-        while s <= n: s+=gs(i);i+=1
-        return i-1,s
-    def vsim(st,sp,si,n,hl,bm,cf,uu=False):
-        r = 0
-        for i in range(n):
-            s,h = st,hl
-            while h:
-                g,h = gf(s),h-1
-                if g[0]%8: 
-                    cr = (.78 if g[0] < 8 else .66 if g[0] < 16 else .61 if g[0] < 24 else .55) if uu else (.92 if g[0] < 8 else .75 if g[0] < 16 else .7 if g[0] < 24 else .63)
-                    bfr = (.078 if g[0] < 8 else .1165 if g[0] < 16 else .1209 if g[0] < 24 else .1245) if uu else 0
-                    tar = (.1826 if g[0] < 8 else .1103 if g[0] < 16 else .1002 if g[0] < 24 else .0818) if uu else (.2253 if g[0] < 8 else .1352 if g[0] < 16 else .1246 if g[0] < 24 else .106)
-                    ad = 2*sp+cf if random.random() < tar else -10 if random.random() < bfr else sp+cf if random.random() < cr else 0
-                else: ad = sp+1; h += si
-                if ad: 
-                    if gf(s+ad)[0]//8 > gf(s)[0]//8: s = sum(gs(j) for j in range(1,gf(s+ad)[0]//8*8))
-                    elif gf(s+ad)[0] < gf(s)[0]: s = sum(gs(j) for j in range(1,gf(s)[0]))
-                    else: s += ad
-            if gf(s)[0] > bm: r+=1
-        return round(r/n*100,2)
-    sp = j['user']['quests']['QuestRiftValour']['power_up_data']['long_stride']['current_value']
-    cf = j['user']['quests']['QuestRiftValour']['floor']
-    cs = j['user']['quests']['QuestRiftValour']['current_step']
-    nf,ne = sum(gs(i) for i in range(cf+1))-1,sum(gs(i) for i in range(cf+(-cf%8)))-1
-    fo = j['user']['quests']['QuestRiftValour']['is_at_eclipse'] or ('f' in args.z and (ne-cs-1)%sp<(ne-cs-1)//sp)
+    if j['user']['quests']['QuestRiftValour']['state']=='farming': 
+        target_bait = 'brie_string_cheese'
+        if current_trinket != 'rift_vacuum_trinket' and 'rift_vacuum_trinket' in trinkets: arm_charm('rift_vacuum_trinket')
+        print('[%s] [%s] farming. gauntlet potions: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),stats['gauntlet_elixir_stat_item'] if 'gauntlet_elixir_stat_item' in stats else 0))
+    else:
+        def gs(n): return 20+((n-1)//8)*10 if n%8 else 1
+        def gf(n): 
+            i,s = 1,0
+            while s <= n: s+=gs(i);i+=1
+            return i-1,s
+        def vsim(st,sp,si,n,hl,bm,cf,uu=False):
+            r = 0
+            for i in range(n):
+                s,h = st,hl
+                while h:
+                    g,h = gf(s),h-1
+                    if g[0]%8: 
+                        cr = (.78 if g[0] < 8 else .66 if g[0] < 16 else .61 if g[0] < 24 else .55) if uu else (.92 if g[0] < 8 else .75 if g[0] < 16 else .7 if g[0] < 24 else .63)
+                        bfr = (.078 if g[0] < 8 else .1165 if g[0] < 16 else .1209 if g[0] < 24 else .1245) if uu else 0
+                        tar = (.1826 if g[0] < 8 else .1103 if g[0] < 16 else .1002 if g[0] < 24 else .0818) if uu else (.2253 if g[0] < 8 else .1352 if g[0] < 16 else .1246 if g[0] < 24 else .106)
+                        ad = 2*sp+cf if random.random() < tar else -10 if random.random() < bfr else sp+cf if random.random() < cr else 0
+                    else: ad = sp+1; h += si
+                    if ad: 
+                        if gf(s+ad)[0]//8 > gf(s)[0]//8: s = sum(gs(j) for j in range(1,gf(s+ad)[0]//8*8))
+                        elif gf(s+ad)[0] < gf(s)[0]: s = sum(gs(j) for j in range(1,gf(s)[0]))
+                        else: s += ad
+                if gf(s)[0] > bm: r+=1
+            return round(r/n*100,2)
+        sp,cf,cs = j['user']['quests']['QuestRiftValour']['power_up_data']['long_stride']['current_value'],j['user']['quests']['QuestRiftValour']['floor'],j['user']['quests']['QuestRiftValour']['current_step']
+        nf,ne = sum(gs(i) for i in range(cf+1))-1,sum(gs(i) for i in range(cf+(-cf%8)))-1
+        fo = j['user']['quests']['QuestRiftValour']['is_at_eclipse'] or ('f' in args.z and (ne-cs-1)%sp<(ne-cs-1)//sp)
+        
+        target_bait = 'brie_string_cheese' if j['user']['quests']['QuestRiftValour']['is_at_eclipse'] or ne-cs<=sp+fo else 'gauntlet_string_cheese'    
+        if fo != j['user']['quests']['QuestRiftValour']['is_fuel_enabled']: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/rift_valour.php',{'uh':hash,'action':'toggle_fuel'},cookies=cookies,headers=post_headers)
+        bm = ''.join(c for c in args.z if c in '0987654321')
+        print('[%s] [%s] floor: %s. step: %s/%s (%s to lvl, %s to ecl%s). hunts left: %s. bait: %s, cf: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),cf,cs,nf,nf-cs,ne-cs,', %s%% of passing'%vsim(cs,6,20,1000,int(j['user']['quests']['QuestRiftValour']['hunts_remaining']),int(bm) if bm else cf+(-cf%8)+1,'f' in args.z,j['user']['quests']['QuestRiftValour']['is_eclipse_mode']) if 's' in args.z else '',j['user']['quests']['QuestRiftValour']['hunts_remaining'],target_bait.replace('_string_cheese',''),'ON' if fo else 'off'))
     
-    target_bait = 'brie_string_cheese' if j['user']['quests']['QuestRiftValour']['is_at_eclipse'] or ne-cs<=sp+fo else 'gauntlet_string_cheese'    
-    if fo != j['user']['quests']['QuestRiftValour']['is_fuel_enabled']: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/rift_valour.php',{'uh':hash,'action':'toggle_fuel'},cookies=cookies,headers=post_headers)
-    bm = ''.join(c for c in args.z if c in '0987654321')
-    print('[%s] [%s] floor: %s. step: %s/%s (%s to lvl, %s to ecl%s). hunts left: %s. bait: %s, cf: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),cf,cs,nf,nf-cs,ne-cs,', %s%% of passing'%vsim(cs,6,20,1000,int(j['user']['quests']['QuestRiftValour']['hunts_remaining']),int(bm) if bm else cf+(-cf%8)+1,'f' in args.z,j['user']['quests']['QuestRiftValour']['is_eclipse_mode']) if 's' in args.z else '',j['user']['quests']['QuestRiftValour']['hunts_remaining'],target_bait.replace('_string_cheese',''),'ON' if fo else 'off'))
     if current_bait != target_bait: arm_bait(target_bait)
         
 def queso(loop_counter=0):
@@ -1667,7 +1678,7 @@ def bb():
         if j['user']['quests']['QuestBountifulBeanstalk']['castle']['is_boss_chase']: 
             rm *= 2
             if 'egg' in rt: target_bait = 'royal_beanster_cheese'
-            elif rm >= 16: target_bait = 'lavish_beanster_cheese'
+            elif rm >= 8: target_bait = 'beanster_cheese'
             print('[%s] [%s] room: %s. boss chase: %s hunts left'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),rt,hr))
         else: 
             r1r = False
@@ -1688,7 +1699,46 @@ def bb():
         
     if target_bait not in baits: target_bait = 'gouda_cheese'
     if current_bait != target_bait: arm_bait(target_bait)
+
+def sos():
+    current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
     
+    if 'school_of_sorcery' not in allowed_regions: return print('[%s] [%s] no access to school of sorcery. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
+    if current_location != 'school_of_sorcery': 
+        travel('school_of_sorcery')
+        current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
+    
+    if not (j['user']['quests']['QuestSchoolOfSorcery']['in_course'] or j['user']['quests']['QuestSchoolOfSorcery']['in_exam']): 
+        if 's' in args.z or ('a' not in args.z and (stats['arcane_sunstone_stat_item'] if 'arcane_sunstone_stat_item' in stats else 0)>=(stats['shadow_moonstone_stat_item'] if 'shadow_moonstone_stat_item' in stats else 0)): cr = 'shadow_101_course'
+        else: cr = 'arcane_101_course'
+        print(cr);quit()
+        requests.post('https://www.mousehuntgame.com/managers/ajax/environment/school_of_sorcery.php',{'uh':hash,'action':'start_course','type':cr,'sn':'Hitgrab','bait_disarm_preference':'standardBait','hg_is_ajax':'1'},cookies=cookies,headers=post_headers)
+        current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
+    
+    ex = j['user']['quests']['QuestSchoolOfSorcery']['in_exam']
+    pt = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['power_type']
+    mm = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['max_magic']
+    mp = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['magic_progress']
+    hr = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['hunts_remaining']
+    cl = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['course_level']
+    mmc = (baits['master_mimolette_cheese'] if 'master_mimolette_cheese' in baits else 0) + (stats['master_mimetite_stat_item'] if 'master_mimetite_stat_item' in stats else 0)/10
+    aac = (baits['apprentice_ambert_cheese'] if 'apprentice_ambert_cheese' in baits else 0) + (stats['apprentice_amber_stat_item'] if 'apprentice_amber_stat_item' in stats else 0)
+    
+    s = None
+    if ('m' in args.z or ex or ('f' in args.z and hr > 50)) and 'master_mimolette_cheese' in baits: target_bait,s = 'master_mimolette_cheese','sorcerers_sapphire_stat_item' if j['user']['quests']['QuestSchoolOfSorcery']['in_exam'] else 'shadow_moonstone_stat_item' if pt == 'shadow' else 'arcane_sunstone_stat_item';target_item = stats[s] if s in stats else 0    
+    elif ('b' in args.z or ex or ('f' in args.z and (hr > 20 or aac > 40))) and 'apprentice_ambert_cheese' in baits: target_bait,target_item = 'apprentice_ambert_cheese',mmc
+    else: target_bait,target_item = 'gouda_cheese',aac
+    
+    cc = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['is_boss_encounter'] or j['user']['quests']['QuestSchoolOfSorcery']['in_exam'] or 'c' in args.z or ('f' in args.z and hr > 50)
+    if j['user']['quests']['QuestSchoolOfSorcery']['is_fuel_enabled'] != cc: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/school_of_sorcery.php',{'uh':hash,'action':'toggle_fuel','sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers)
+
+    print('[%s] [%s] course: %s lvl %s. room: %s/%s (%s hunts left). bait: %s %s, loot: %s %s. cc: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),'%s exam'%pt if ex else pt,cl,mp,mm,hr,baits[target_bait],target_bait[0].upper(),target_item,s if s else 'cheese','ON' if cc else 'off'))
+
+    if current_base != best_base: arm_base(best_base)
+    target_weapon = best_weapons[pt.title()]
+    if current_weapon != target_weapon: arm_weapon(target_weapon)
+    if current_bait != target_bait: arm_bait(target_bait)
+     
 def halloween(loop_counter=0):
     current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
         
@@ -1823,12 +1873,12 @@ def bday(loop_counter=0):
 def status_check():
     global hash,allowed_regions,antibot_triggered,lpt,user_id,lrje
     if antibot_triggered or args.a:
-        d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','login_token':cookie}
+        d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','login_token':cookie}
         r = requests.post('https://www.mousehuntgame.com/api/action/passiveturn',d,headers=api_headers)
         if r.status_code != 200:
             print('[%s] session expired. logging in again'%(datetime.datetime.now().replace(microsecond=0)))
             login()
-            d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','login_token':cookie}
+            d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','login_token':cookie}
             r = requests.post('https://www.mousehuntgame.com/api/action/passiveturn',d,headers=api_headers)
         j = json.loads(r.text)
         hash,user_id,lpt,next_horn,have_bait,s = j['user']['uh'],j['user']['user_id'],j['user']['last_passiveturn_timestamp'],j['user']['next_activeturn_seconds'],j['user']['trap']['bait_id'],time.time()
@@ -1845,7 +1895,7 @@ def status_check():
                 login()
                 r = requests.get('https://www.mousehuntgame.com/camp.php',cookies=cookies,headers=get_headers)
             r = r.text
-            hash,user_id,lrje,next_horn,have_bait,s = re.findall('"unique_hash":"([^"]*)"',r)[0],re.findall('"user_id":([^,]*)',r)[0],int(re.findall('lastReadJournalEntryId = ([^;]*);',r)[0]),int(re.findall('"next_activeturn_seconds":(\d*)',r)[0]),'"bait_quantity":0' not in r,time.time()
+            hash,user_id,lrje,next_horn,have_bait,s = re.findall(r'"unique_hash":"([^"]*)"',r)[0],re.findall(r'"user_id":([^,]*)',r)[0],int(re.findall(r'lastReadJournalEntryId = ([^;]*);',r)[0]),int(re.findall(r'"next_activeturn_seconds":(\d*)',r)[0]),'"bait_quantity":0' not in r,time.time()
             if '"has_puzzle":true' in r: antibot_triggered = int(time.time()*1000)
         if antibot_triggered:
             print('[%s] antibot triggered'%(datetime.datetime.now().replace(microsecond=0)))
@@ -1865,8 +1915,8 @@ def wait(delay_mins,norandom=False):
     
 def print_entry(t):
     try: 
-        for m in re.findall('<[^>]*>',t): t = t.replace(m,'')
-        for m in re.findall('&\w{4};',t): t = t.replace(m,' ')
+        for m in re.findall(r'<[^>]*>',t): t = t.replace(m,'')
+        for m in re.findall(r'&\w{4};',t): t = t.replace(m,' ')
         s = t.index('!',20) if '!' in t[20:-2] else t.index('.',(t.index('oz.')+3) if 'oz.' in t else 0)
         if t[:s+1]: print('[%s] %s'%(datetime.datetime.now().replace(microsecond=0),t[:s+1].lstrip()))
         if t[s+1:]: print_entry(t[s+1:])
@@ -1874,7 +1924,7 @@ def print_entry(t):
 
 def horn():
     global lpt,lrje,hash,user_id,antibot_triggered
-    fail = 0
+    fail,atr = 0,antibot_triggered
     try: assert lpt
     except: lpt = int(time.time()) - 15*60
     while 1:
@@ -1887,22 +1937,24 @@ def horn():
             horn_time = int(time.time())
             if cycle: choose_cycle()
         latency_start = time.time()
+        wait_time = 0
         try:
-            wait_time = 0
             if antibot_triggered or args.a:
-                d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','last_passiveturn_timestamp':lpt,'login_token':cookie}
+                d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','last_passiveturn_timestamp':lpt,'login_token':cookie}
+                r = requests.post('https://www.mousehuntgame.com/api/action/turn/me',d,headers=api_headers).text
+                print(r);quit()
                 j = json.loads(requests.post('https://www.mousehuntgame.com/api/action/turn/me',d,headers=api_headers).text)
-                hash,user_id,success,wait_time,lpt,gold,points,have_bait = j['user']['uh'],j['user']['user_id'],j['success'],j['user']['next_activeturn_seconds'],j['user']['last_passiveturn_timestamp'],j['user']['gold'],j['user']['points'],j['user']['trap']['bait_id']
+                hash,user_id,success,wait_time,lpt,gold,have_bait = j['user']['uh'],j['user']['user_id'],j['success'],j['user']['next_activeturn_seconds'],j['user']['last_passiveturn_timestamp'],j['user']['gold'],j['user']['trap']['bait_id']
             else:
                 d = {"uh":hash,"last_read_journal_entry_id":lrje,"hg_is_ajax":1,"sn":"Hitgrab"}
                 j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/turns/activeturn.php',d,cookies=cookies,headers=post_headers).text)
-                hash,user_id,success,wait_time,gold,points,have_bait,antibot_triggered = j['user']['unique_hash'],j['user']['user_id'],j['success'] and not j['user']['has_puzzle'],j['user']['next_activeturn_seconds'],j['user']['gold'],j['user']['points'],j['user']['bait_item_id'],int(time.time()*1000) if j['user']['has_puzzle'] else 0
+                hash,user_id,success,wait_time,gold,have_bait,antibot_triggered = j['user']['unique_hash'],j['user']['user_id'],j['success'] and not j['user']['has_puzzle'],j['user']['next_activeturn_seconds'],j['user']['gold'],j['user']['bait_item_id'],int(time.time()*1000) if j['user']['has_puzzle'] else 0
         except: success = 0
         if success:
-            print('[%s] horn success. latency: %s, gold: %s, points: %s, horns: %s%s'%(datetime.datetime.now().replace(microsecond=0),round(time.time()-latency_start,3),gold,points,horns+1,', antibot: %s'%('TRIGGERED' if antibot_triggered else 'inactive') if antibot_mode == 'bypass' and not args.a else ''))
+            print('[%s] horn success. latency: %s, gold: %s, horns: %s%s'%(datetime.datetime.now().replace(microsecond=0),round(time.time()-latency_start,3),gold,horns+1,', antibot: %s'%('TRIGGERED' if antibot_triggered else 'inactive') if antibot_mode == 'bypass' and not args.a else ''))
             if args.a: return 1
             elif antibot_triggered:
-                d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','offset':0,'limit':72,'return_user':'true','login_token':cookie}        
+                d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','offset':0,'limit':72,'return_user':'true','login_token':cookie}        
                 r = json.loads(requests.post('https://www.mousehuntgame.com/api/get/journalentries/me',d,headers=api_headers).text)
                 for entry in r['entries']:
                     if entry['timestamp'] < horn_time: break
@@ -1925,7 +1977,7 @@ def horn():
             if wait_time: 
                 print('[%s] horn not ready'%(datetime.datetime.now().replace(microsecond=0)))
                 wait(float((wait_time+2)/60),norandom=True)
-            elif antibot_triggered:
+            elif antibot_triggered and antibot_triggered != atr:
                 print('[%s] antibot triggered'%(datetime.datetime.now().replace(microsecond=0)))
                 if not antibot_mode == 'bypass': antibot()
             else: 
@@ -1988,7 +2040,8 @@ if initial_wait > 60: choose_cycle()
 wait(max(float((initial_wait+1)/60),float(args.w if args.w else 0)/60),norandom=True)
 while 1:
     if random.random() >= miss_chance or horns==0: 
-        horns += horn()
+        try: horns += horn()
+        except Exception as e: print('[%s] error: %s'%(datetime.datetime.now().replace(microsecond=0),e));continue
         wait(interval)
     else: 
         print('[%s] giving this one a miss'%(datetime.datetime.now().replace(microsecond=0)))
