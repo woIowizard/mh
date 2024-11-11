@@ -1,0 +1,5 @@
+beautifulsoup4==4.12.3
+bs4==0.0.2
+cloudscraper==1.2.71
+regex==2024.5.15
+urllib3==2.2.1
