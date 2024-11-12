@@ -1699,45 +1699,6 @@ def bb():
         
     if target_bait not in baits: target_bait = 'gouda_cheese'
     if current_bait != target_bait: arm_bait(target_bait)
-
-def sos():
-    current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
-    
-    if 'school_of_sorcery' not in allowed_regions: return print('[%s] [%s] no access to school of sorcery. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
-    if current_location != 'school_of_sorcery': 
-        travel('school_of_sorcery')
-        current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
-    
-    if not (j['user']['quests']['QuestSchoolOfSorcery']['in_course'] or j['user']['quests']['QuestSchoolOfSorcery']['in_exam']): 
-        if 's' in args.z or ('a' not in args.z and (stats['arcane_sunstone_stat_item'] if 'arcane_sunstone_stat_item' in stats else 0)>=(stats['shadow_moonstone_stat_item'] if 'shadow_moonstone_stat_item' in stats else 0)): cr = 'shadow_101_course'
-        else: cr = 'arcane_101_course'
-        print(cr);quit()
-        requests.post('https://www.mousehuntgame.com/managers/ajax/environment/school_of_sorcery.php',{'uh':hash,'action':'start_course','type':cr,'sn':'Hitgrab','bait_disarm_preference':'standardBait','hg_is_ajax':'1'},cookies=cookies,headers=post_headers)
-        current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
-    
-    ex = j['user']['quests']['QuestSchoolOfSorcery']['in_exam']
-    pt = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['power_type']
-    mm = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['max_magic']
-    mp = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['magic_progress']
-    hr = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['hunts_remaining']
-    cl = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['course_level']
-    mmc = (baits['master_mimolette_cheese'] if 'master_mimolette_cheese' in baits else 0) + (stats['master_mimetite_stat_item'] if 'master_mimetite_stat_item' in stats else 0)/10
-    aac = (baits['apprentice_ambert_cheese'] if 'apprentice_ambert_cheese' in baits else 0) + (stats['apprentice_amber_stat_item'] if 'apprentice_amber_stat_item' in stats else 0)
-    
-    s = None
-    if ('m' in args.z or ex or ('f' in args.z and hr > 50)) and 'master_mimolette_cheese' in baits: target_bait,s = 'master_mimolette_cheese','sorcerers_sapphire_stat_item' if j['user']['quests']['QuestSchoolOfSorcery']['in_exam'] else 'shadow_moonstone_stat_item' if pt == 'shadow' else 'arcane_sunstone_stat_item';target_item = stats[s] if s in stats else 0    
-    elif ('b' in args.z or ex or ('f' in args.z and (hr > 20 or aac > 40))) and 'apprentice_ambert_cheese' in baits: target_bait,target_item = 'apprentice_ambert_cheese',mmc
-    else: target_bait,target_item = 'gouda_cheese',aac
-    
-    cc = j['user']['quests']['QuestSchoolOfSorcery']['current_course']['is_boss_encounter'] or j['user']['quests']['QuestSchoolOfSorcery']['in_exam'] or 'c' in args.z or ('f' in args.z and hr > 50)
-    if j['user']['quests']['QuestSchoolOfSorcery']['is_fuel_enabled'] != cc: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/school_of_sorcery.php',{'uh':hash,'action':'toggle_fuel','sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers)
-
-    print('[%s] [%s] course: %s lvl %s. room: %s/%s (%s hunts left). bait: %s %s, loot: %s %s. cc: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),'%s exam'%pt if ex else pt,cl,mp,mm,hr,baits[target_bait],target_bait[0].upper(),target_item,s if s else 'cheese','ON' if cc else 'off'))
-
-    if current_base != best_base: arm_base(best_base)
-    target_weapon = best_weapons[pt.title()]
-    if current_weapon != target_weapon: arm_weapon(target_weapon)
-    if current_bait != target_bait: arm_bait(target_bait)
      
 def halloween(loop_counter=0):
     current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
