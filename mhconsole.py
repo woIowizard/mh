@@ -15,8 +15,8 @@ M     M  H    H   CCCC   OOOO   N    NN  SSSSS    OOOO   LLLLL  EEEEE
 print(banner)
 print('[=] loading imports and function definitions')
 
-import requests,json,re,subprocess,sys,time,datetime
-
+import json,re,subprocess,sys,time,datetime,cloudscraper
+requests = cloudscraper.create_scraper()
 
 ########## LOGIN RELATED FUNCTIONS ##########
 def login_creds():
@@ -27,7 +27,7 @@ def login_creds():
        
 def login_cookie():
     global hash,cookie,user,sn_user_id,cookies
-    r = requests.post('https://www.mousehuntgame.com/api/action/passiveturn',{'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','login_token':cookie},headers=api_headers)
+    r = requests.post('https://www.mousehuntgame.com/api/action/passiveturn',{'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','login_token':cookie},headers=api_headers)
     if r.status_code == 200:
         j = json.loads(r.text)['user']
         cookies, hash,user,sn_user_id = {'HG_TOKEN':cookie}, j['uh'], j['name'], j['sn_user_id']
@@ -188,13 +188,15 @@ kr [code]\t\tsolve captcha
     
     cmd = input('\nmh [%s] %s> '%(user,'(!)' if antibot else '')).strip().lstrip()
     while '  ' in cmd: cmd = cmd.replace('  ',' ')
-    if ';' not in cmd: proc(cmd)
-    else: 
-        for c in cmd.split(';'): print(('\nmh [%s] %s> %s'%(user,'(!)' if antibot else '',c.strip().lstrip()))); proc(c.strip().lstrip())        
+    try: 
+        if ';' not in cmd and cmd.split()[-1][0] == '{' and cmd.split()[-1][-1] == '}': cmd = ((' '.join(cmd.split()[:-1])+';')*int(cmd.split()[-1][1:-1]))[:-1]
+    except: pass
+    if ';' not in cmd: proc(cmd); return
+    for c in cmd.split(';'): print(('\nmh [%s] %s> %s'%(user,'(!)' if antibot else '',c.strip().lstrip()))); proc(c.strip().lstrip())        
 
 def print_entry(t):
     try: 
-        for m in re.findall('<[^>]*>',t): t = t.replace(m,'')
+        for m in re.findall(r'<[^>]*>',t): t = t.replace(m,'')
         s = t.index('!',20) if '!' in t[20:-2] else t.index('.',(t.index('oz.')+3) if 'oz.' in t else 0)
         if t[:s+1]: print('\t%s'%(t[:s+1].lstrip()))
         if t[s+1:]: print_entry(t[s+1:])
@@ -211,10 +213,10 @@ def horn(content):
     if m: return print('[-] too soon to sound. next horn in %s:%s at %s'%(m//60,m%60,('%s'%(datetime.datetime.now().replace(microsecond=0)+datetime.timedelta(seconds=m))).split(' ')[1]))
     else:
         horn_time = int(time.time())   
-        r = json.loads(requests.post('https://www.mousehuntgame.com/api/action/turn/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','last_passiveturn_timestamp':lpt,'login_token':cookie},headers=api_headers).text)
+        r = json.loads(requests.post('https://www.mousehuntgame.com/api/action/turn/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','last_passiveturn_timestamp':lpt,'login_token':cookie},headers=api_headers).text)
         if r['success']: 
             print('[+] successfully sounded the horn. response:\n\t[%s]'%(datetime.datetime.now().replace(microsecond=0)))
-            r = json.loads(requests.post('https://www.mousehuntgame.com/api/get/journalentries/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','offset':0,'limit':72,'return_user':'true','login_token':cookie},headers=api_headers).text)
+            r = json.loads(requests.post('https://www.mousehuntgame.com/api/get/journalentries/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','offset':0,'limit':72,'return_user':'true','login_token':cookie},headers=api_headers).text)
             for entry in r['entries']:
                 if entry['timestamp'] < horn_time: return print('\n\tnext horn: %s'%('%s'%(datetime.datetime.now().replace(microsecond=0)+datetime.timedelta(seconds=900))).split(' ')[1])
                 print_entry(entry['text'])
@@ -225,28 +227,28 @@ def info():
     content = requests.get('https://www.mousehuntgame.com/camp.php',cookies=cookies,headers=get_headers).text
     antibot = '"has_puzzle":true' in content
     
-    m = int(re.findall('"next_activeturn_seconds":(\d*)',content)[0])
+    m = int(re.findall(r'"next_activeturn_seconds":(\d*)',content)[0])
     next_horn = '%s:%s'%(m//60,m%60) if m else 'READY'
     url = 'https://www.mousehuntgame.com/images/puzzleimage.php?snuid=%s&hash=%s'%(sn_user_id,hash)
     print('HORN INFO\nnext horn:\t%s at %s\nantibot:\t%s\n%s'%(next_horn,('%s'%(datetime.datetime.now().replace(microsecond=0)+datetime.timedelta(seconds=m))).split(' ')[1],'ACTIVE' if antibot else 'inactive','KR url:\t\t%s\n'%url if antibot else ''))
     
-    gold = re.findall('"gold":(\d*)',content)[0]
-    points = re.findall('"points":(\d*)',content)[0]
+    gold = re.findall(r'"gold":(\d*)',content)[0]
+    points = re.findall(r'"points":(\d*)',content)[0]
     print('WEALTH INFO\ngold:\t\t%s\npoints:\t\t%s\n'%(gold,points))
 
-    base = re.findall('"base_name":"([^"]*)"',content)[0]
-    weapon = re.findall('"weapon_name":"([^"]*)"',content)[0]
-    type = re.findall('"trap_power_type_name":"([^"]*)"',content)[0]
-    bait = re.findall('"bait_name":"([^"]*)"',content)
+    base = re.findall(r'"base_name":"([^"]*)"',content)[0]
+    weapon = re.findall(r'"weapon_name":"([^"]*)"',content)[0]
+    type = re.findall(r'"trap_power_type_name":"([^"]*)"',content)[0]
+    bait = re.findall(r'"bait_name":"([^"]*)"',content)
     bait = bait[0] if bait else 'out of bait'
-    baitq = re.findall('"bait_quantity":(\d*)',content)[0]
-    power = re.findall('"trap_power":(\d*)',content)[0]
-    luck = re.findall('"trap_luck":(\d*)',content)[0]
-    freshness = re.findall('"trap_cheese_effect":"([^"]*)"',content)[0]
+    baitq = re.findall(r'"bait_quantity":(\d*)',content)[0]
+    power = re.findall(r'"trap_power":(\d*)',content)[0]
+    luck = re.findall(r'"trap_luck":(\d*)',content)[0]
+    freshness = re.findall(r'"trap_cheese_effect":"([^"]*)"',content)[0]
     print('TRAP INFO\nbase:\t\t%s\nweapon:\t\t%s\ntype:\t\t%s\nbait:\t\t%s\nquantity:\t%s\npower:\t\t%s\nluck:\t\t%s\nfreshness:\t%s'%(base,weapon,type,bait,baitq,power,luck,freshness),end='')
     try: 
-        charm = re.findall('"trinket_name":"([^"]*)"',content)[0]
-        charmq = re.findall('"trinket_quantity":(\d*)',content)[0]
+        charm = re.findall(r'"trinket_name":"([^"]*)"',content)[0]
+        charmq = re.findall(r'"trinket_quantity":(\d*)',content)[0]
         print('\ncharm:\t\t%s\ncharm quantity:\t%s\n'%(charm,charmq))
     except: print('\n')
     
@@ -279,7 +281,7 @@ def move(args):
             print('')
     else:
         for e in [x for n in col for x in col[n]]:
-            if '_'.join(args).lower() in [str(e[0]),e[1]]: 
+            if '_'.join(args).lower() in [str(e[0]),e[1]] or ' '.join(args).lower() == e[2].lower():
                 if e[3]: 
                     j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/changeenvironment.php',{'uh':hash,'destination':e[1]},headers=post_headers,cookies=cookies).text)
                     if j['success']: print('[+] travelled to %s'%(e[2].lower()))
@@ -391,7 +393,7 @@ def buy(args):
 
 def craft(cmd,args): 
     global table
-    items = get_craft()
+    items = get_items()
             
     if cmd == 'list': 
         print('ITEMS IN INVENTORY')
@@ -403,11 +405,11 @@ def craft(cmd,args):
         if not args: return print('[-] usage: add [item] [quantity]')
         try: int(args[-1]); assert len(args) > 1
         except: args.append('1')
-        try: target_item = list(items.keys())[int(args[0])]
+        try: target_item = list(sorted(items.keys()))[int(args[0])]
         except:
             target_item = '_'.join(args[:-1]).lower()
             if target_item == 'curds': target_item = 'curds_and_whey'
-            if target_item == 'milk': target_item = 'coconut_milk'
+            elif target_item == 'milk': target_item = 'coconut_milk'
             if target_item in items.keys(): pass
             elif target_item + '_craft_item' in items.keys(): target_item += '_craft_item'
             elif target_item + '_crafting_item' in items.keys(): target_item += '_crafting_item'
@@ -439,42 +441,37 @@ def craft(cmd,args):
         except: return print('[-] something went wrong')
         if j['success'] == 1:
             t = j['messageData']['message_model']['messages'][0]['messageData']['content']['body']
-            for n in re.findall('<[^>]*>',t): t = t.replace(n,'')
+            for n in re.findall(r'<[^>]*>',t): t = t.replace(n,'')
             print('[+] %s'%t)
         else: print('[-] %s'%j['jsDialog']['tokens']['content']['value'])
     elif cmd == 'back': return 0
     elif cmd == 'exit' or cmd == 'quit': exit_mhconsole()
     else: huh()
         
-def get_craft(): 
-    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/gettrapcomponents.php',cookies=cookies,headers=post_headers).text)['components']
-    items = sorted([c for c in j if c['classification'] == 'crafting_item'],key=lambda x:x['type'])
-    return {l['type']:(l['name'],l['quantity']) for l in items}
-
-def get_stat(): 
-    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/gettrapcomponents.php',cookies=cookies,headers=post_headers).text)['components']
-    items = sorted([c for c in j if c['classification'] in ['stat','trinket','crafting_item']],key=lambda x:x['type'])
-    return {l['type']:(l['name'],l['quantity']) for l in items}
-
 def list_craft(items,k=''):
     print('NO.\tQTY\tMH NAME\t\t\t\t\t\tCOMMON NAME')
     cache = {'fofo':'crop_coin_stat_item|inspiration_ink_stat_item|parable_papyrus_stat_item|pond_penny_stat_item|draft_derby_curd_stat_item|cleverness_clam_stat_item|ingenuity_grub_stat_item|condensed_creativity_stat_item','sc':'sand_dollar_stat_item|oxygen_stat_item|damaged_coral_crafting_item|barnacle_crafting_item|brined_curd_crafting_item|mouse_scale_crafting_item|water_jet_trinket|anchor_trinket|predatory_processor_crafting_item','fi':'cloud_curd_crafting_item|airship_rocket_fuel_stat_item|floating_islands_cloud_gem_stat_item|sky_scrambler_stat_item|cloudstone_bangle_stat_item|floating_islands_sky_ore_stat_item|bottled_wind_stat_item|empyrean_seal_stat_item|enchanted_wing_stat_item|sky_pirate_cheese_curd_crafting_item|sky_pirate_seal_stat_item|skysoft_silk_stat_item|sky_sprocket_stat_item','queso':'queso|spice_crafting_item|ember_root_crafting_item|ember_stone_crafting_item|wild_tonic_stat_item|magic_cork_dust_stat_item','vrift':'rift_ultimate_|rift_gauntlet_fuel_stat_item|gauntlet_elixir_stat_item','lg':'|'.join('essence_%s_crafting_item'%c for c in 'abcdefghi')+'|plumepearl_herbs_crafting_item|lunaria_petal_crafting_item'}
     if ' '.join(k) in cache: k = [cache[' '.join(k)]]
-    for ind,n in enumerate(items):     
+    for ind,n in enumerate(sorted(items.keys())):
         if [c for c in ' '.join(k).split('|') if c.lower() in items[n][0].lower() or c.replace(' ','_') in n]: print('{0:<3}\t{1:<5}\t{2:<40}\t{3}'.format(ind,items[n][1],n,items[n][0]))
 
 def market(args): 
     global mp
-    if not mp or not args or args[0] not in 'sbw': 
-        j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/marketplace.php',{'sn':'Hitgrab','hg_is_ajax':1,'action':'marketplace_info','uh':hash},cookies=cookies,headers=post_headers).text)
-        mp['r'] = {str(l['item_id']):(l['type'],l['name']) for l in j['marketplace_items']}
-        mp['me'] = {str(l['listing_id']):l for l in j['marketplace_my_listings']}
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/marketplace.php',{'sn':'Hitgrab','hg_is_ajax':1,'action':'marketplace_info','uh':hash},cookies=cookies,headers=post_headers).text)
+    mp['r'] = {str(l['item_id']):(l['type'],l['name'],l['quantity']) for l in j['marketplace_items']}
+    mp['me'] = {str(l['listing_id']):l for l in j['marketplace_my_listings']}
+    gold,items = j['user']['gold'], {c['type']:(c['quantity'],c['name'],c['item_id']) for c in j['marketplace_items'] if c['quantity']}
     
     if not args: 
         if not mp['me']: print('[=] no marketplace listing')
         else: 
             print('NO.\tLISTING ID\tTYPE\tITEM ID\t\tUNIT PRICE\tQTY\t\tCLAIM\t\tNAME')
             for i,l in enumerate(sorted(mp['me'].values(),key=lambda x:int(x['listing_id']))): print('{0:<3}\t{1:<8}\t{2}\t{3:<5}\t\t{4:<10}\t{5:<5}\t\t{6:<5}\t\t{7}'.format(i+1,l['listing_id'],l['listing_type'],l['item_id'],l['unit_price'],l['remaining_quantity'],'no' if (l['listing_type'] == 'buy' and not l['item_escrow']) or (l['listing_type'] == 'sell' and not l['gold_escrow']) else 'YES',mp['r'][str(l['item_id'])][1]))
+        return
+    
+    if args[0] == 'list':
+        print('ID\tQTY\tTYPE\t\t\t\t\t\tNAME')
+        for l in sorted(items.keys()): print('{0:<5}\t{1:<3}\t{2:<40}\t{3}'.format(items[l][2],items[l][0],l,items[l][1]))
         return
     
     if args[0] == 'e': 
@@ -510,6 +507,9 @@ def market(args):
             if j['success']: 
                 if args[0] == 'c': print('[+] listing %s claimed: received %s %s%s'%(l,mp['me'][l]['item_escrow' if mp['me'][l]['listing_type'] == 'buy' else 'gold_escrow'],mp['r'][str(mp['me'][l]['item_id'])][1] if mp['me'][l]['listing_type'] == 'buy' else 'gold','\n' if args[1] == '_' else ''))
                 elif args[0] in ['d','u']: print('[+] listing %s cancelled: received %s %s and %s gold'%(l,mp['me'][l]['item_escrow'],mp['r'][str(mp['me'][l]['item_id'])][1],mp['me'][l]['gold_escrow']))
+                #print(mp['me'][l]); quit()
+                #mp['r'][str(mp['me'][l]['item_id'])][0]
+                items[mp['r'][str(mp['me'][l]['item_id'])][0]] = (mp['me'][l]['item_escrow']+items[mp['r'][str(mp['me'][l]['item_id'])][0]][0] if mp['r'][str(mp['me'][l]['item_id'])][0] in items else mp['me'][l]['item_escrow'],mp['r'][str(mp['me'][l]['item_id'])][1],mp['me'][l]['item_id'])
             else: return print('[-] %s'%j['marketplace_error'])
         
         mp['me'] = {str(l['listing_id']):l for l in j['marketplace_my_listings']}
@@ -521,13 +521,18 @@ def market(args):
         try: assert len(args) >= 4 and int(args[-1]) >= (0 if args[0] == 's' else 1) and (int(args[-2]) >= 10 or int(args[-2]) in [-1,0] )
         except: return print('[-] usage: mp b/s item price qty')
         ia = '_'.join(args[1:-2])
+    elif args[0] == 'ss': 
+        try: assert len(args) > 1
+        except: return print('[-] usage: mp ss item')
+        ia = '_'.join(args[1:])
+        args = ['s',ia,'0','0']
     elif args[0] == 'w':
         try: assert len(args) >= 3 and int(args[-1]) > 0
         except: return print('[-] usage: mp w item time')
         ia = '_'.join(args[1:-1])
     else: ia = '_'.join(args)
     
-    cache = {'sb':[c for c in mp['r'] if mp['r'][c][0]=='super_brie_cheese'][0],'frc':'birthday_factory_trinket','scc':'speed_coggy_colby_cheese','msc':'magical_string_cheese','wt':'wild_tonic_stat_item','gg':'glowing_gruyere_cheese','asc':'ancient_string_cheese','ps':'rift_scramble_portals_stat_item','qq':'rift_quantum_quartz_stat_item','gpp':'glazed_pecan_pecorino_cheese','fs':'festive_spirit_stat_item','rr':'cauldron_instant_finish_stat_item'}
+    cache = {'sb':[c for c in mp['r'] if mp['r'][c][0]=='super_brie_cheese'][0],'frc':'birthday_factory_trinket','scc':'speed_coggy_colby_cheese','msc':'magical_string_cheese','wt':'wild_tonic_stat_item','gg':'glowing_gruyere_cheese','asc':'ancient_string_cheese','ps':'rift_scramble_portals_stat_item','qq':'rift_quantum_quartz_stat_item','gpp':'glazed_pecan_pecorino_cheese','fs':'festive_spirit_stat_item','rr':'cauldron_instant_finish_stat_item','aej':'floating_trap_upgrade_stat_item','cc':'condensed_creativity_stat_item'}
     if ia in cache: ia = cache[ia]
     
     if ia in mp['r']: iid = ia
@@ -539,7 +544,6 @@ def market(args):
         if len(sr) == 1: iid = sr[0]
         else: return
     
-    gold,items = get_items()
     mpl = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/marketplace.php',{'sn':'Hitgrab','hg_is_ajax':1,'action':'get_item_listings','uh':hash,'item_id':iid},cookies=cookies,headers=post_headers).text)
     try: ms = min(x['unit_price'] for x in mpl['marketplace_item_listings'][iid]['sell'])-1
     except: ms = 0
@@ -552,8 +556,8 @@ def market(args):
             if not int(args[-2]): args[-2] = ms if args[0] == 's' else mb
             else: args[-2] = mb-1 if args[0] == 's' else ms+1
         if args[0] == 's':
-            if mp['r'][iid][0] not in items or items[mp['r'][iid][0]] < int(args[-1]): return print('[-] insufficient %s (have %s)'%(mp['r'][iid][1],items[mp['r'][iid][0]] if mp['r'][iid][0] in items else 0))
-            if not int(args[-1]): args[-1] = items[mp['r'][iid][0]] if mp['r'][iid][0] in items else 0
+            if mp['r'][iid][0] not in items or not items[mp['r'][iid][0]][0] or items[mp['r'][iid][0]][0] < int(args[-1]): return print('[-] insufficient %s (have %s)'%(mp['r'][iid][1],items[mp['r'][iid][0]][0] if mp['r'][iid][0] in items else 0))
+            if not int(args[-1]): args[-1] = items[mp['r'][iid][0]][0]
         elif gold < int(args[-1])*int(args[-2]): return print('[-] insufficient gold (require %s, have %s)'%(int(args[-1])*int(args[-2]),gold))
         
         if args[0] == 's' and int(args[-2]) < min(mb-1,ms): 
@@ -569,7 +573,7 @@ def market(args):
     
     while 1:    
         mn = int(ms/1.1-mb)
-        print('\nSHOWING LISTINGS FOR: %s (inv: %s, margin: %s%s, name: %s)'%(mp['r'][iid][1],items[mp['r'][iid][0]] if mp['r'][iid][0] in items else 0, '+' if mn > 0 else '',mn,mp['r'][iid][0]))
+        print('\nSHOWING LISTINGS FOR: %s (inv: %s, margin: %s%s, name: %s)'%(mp['r'][iid][1],items[mp['r'][iid][0]][0] if mp['r'][iid][0] in items else 0, '+' if mn > 0 else '',mn,mp['r'][iid][0]))
         print('\n=================== SELL ORDERS ===================\t\t=================== BUY ORDERS ===================\nQTY\tSELL PRICE\tAFTER TAX\tBEFORE TAX\t\tQTY\tBUY PRICE\tBEFORE TAX\tAFTER TAX')
         ph = [{'quantity':0,'unit_price':0,'unit_price_without_tariff':0}]*4
         for x,y in zip(mpl['marketplace_item_listings'][iid]['sell'] if mpl['marketplace_item_listings'][iid]['sell'] else ph,mpl['marketplace_item_listings'][iid]['buy'] if mpl['marketplace_item_listings'][iid]['buy'] else ph): print('{0:<5}\t{1:<10}\t{2:<10}\t{3:<10}\t\t{4:<5}\t{5:<10}\t{6:<10}\t{7:<10}'.format(x['quantity'],x['unit_price'],x['unit_price_without_tariff'],int(x['unit_price']*1.1),y['quantity'],y['unit_price'],int(y['unit_price']*1.1),int(y['unit_price']/1.1)))
@@ -583,9 +587,26 @@ def market(args):
         time.sleep(int(args[-1]))
         mpl = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/marketplace.php',{'sn':'Hitgrab','hg_is_ajax':1,'action':'get_item_listings','uh':hash,'item_id':iid},cookies=cookies,headers=post_headers).text)
         
-def get_items(): 
-    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/gettrapcomponents.php',cookies=cookies,headers=post_headers).text)
-    return j['user']['gold'],{c['type']:c['quantity'] if 'quantity' in c else 0 for c in j['components']}
+def get_everything():
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'special','page_arguments[sub_tab]':'all','uh':hash},cookies=cookies,headers=post_headers).text)
+    items['stat'] = {c['type']:(c['quantity'],c['name']) for s in j['page']['tabs'][4]['subtabs'] for t in s['tags'] for c in t['items']}
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'crafting','page_arguments[sub_tab]':'crafting_table','uh':hash},cookies=cookies,headers=post_headers).text)
+    items['craft'] = {c['type']:(c['quantity'],c['name']) for t in j['page']['tabs'][2]['subtabs'][1]['tags'] for c in t['items']}
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'cheese','page_arguments[sub_tab]':'false','uh':hash},cookies=cookies,headers=post_headers).text)
+    items['bait'] = {c['type']:(c['quantity'],c['name']) for t in j['page']['tabs'][0]['subtabs'][0]['tags'] for c in t['items']}
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'potions','page_arguments[sub_tab]':'false','uh':hash},cookies=cookies,headers=post_headers).text)
+    items['pot'] = {c['type']:(c['quantity'],c['name']) for t in j['page']['tabs'][3]['subtabs'][0]['tags'] for c in t['items']}
+    i,items['all'] = 0,{}
+    for k in ['craft','stat','bait','pot']: 
+        for t in items[k]: items['all'][i] = (t,items[k][t][0],items[k][t][1]); i += 1
+        
+def get_stat():
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'special','page_arguments[sub_tab]':'all','uh':hash},cookies=cookies,headers=post_headers).text)
+    return {c['type']:(c['name'],c['quantity']) for s in j['page']['tabs'][4]['subtabs'] for t in s['tags'] for c in t['items']}
+        
+def get_items():
+    j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'sn':'Hitgrab','hg_is_ajax':'1','page_class':'Inventory','page_arguments[tab]':'crafting','page_arguments[sub_tab]':'crafting_table','uh':hash},cookies=cookies,headers=post_headers).text)
+    return {c['type']:(c['name'],c['quantity']) for t in j['page']['tabs'][2]['subtabs'][1]['tags'] for c in t['items']}
 
 def hammer(args): 
     j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/page.php',{'uh':hash,'page_class':'Inventory','page_arguments[tab]':'crafting','page_arguments[sub_tab]':'hammer'},cookies=cookies,headers=post_headers).text)
@@ -610,7 +631,7 @@ def hammer(args):
         j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/usehammer.php',{'uh':hash,'item_type':target_item,'item_qty':qty},headers=post_headers,cookies=cookies).text)
         if j['success'] == 1:
             t = j['messageData']['message_model']['messages'][0]['messageData']['content']['body']
-            for n in re.findall('<[^>]*>',t): t = t.replace(n,'')
+            for n in re.findall(r'<[^>]*>',t): t = t.replace(n,'')
             print('[+] %s'%t)
         else: print('[-] %s'%j['jsDialog']['tokens']['content']['value'])       
         
@@ -642,7 +663,7 @@ def chest(args):
             chest_time = int(time.time())
             j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/useconvertible.php',{'uh':hash,'item_type':target_item,'item_qty':qty},headers=post_headers,cookies=cookies).text)
             if j['success'] == 1:    
-                r = json.loads(requests.post('https://www.mousehuntgame.com/api/get/journalentries/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.135.2','offset':0,'limit':72,'return_user':'true','login_token':cookie},headers=api_headers).text)
+                r = json.loads(requests.post('https://www.mousehuntgame.com/api/get/journalentries/me',{'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','offset':0,'limit':72,'return_user':'true','login_token':cookie},headers=api_headers).text.strip())
                 for entry in r['entries']:
                     if entry['timestamp'] < chest_time: break
                     print(entry['text'] + ('\n' if args == ['_'] else ''))
@@ -687,7 +708,7 @@ def pot(args):
     j = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/usepotion.php',{'potion':target_item,'num_potions':qty,'recipe_index':rec,'uh':hash},headers=post_headers,cookies=cookies).text)
     if j['success'] == 1:
         t = j['messageData']['message_model']['messages'][0]['messageData']['content']['title'] + ' ' + j['messageData']['message_model']['messages'][0]['messageData']['content']['body']
-        for n in re.findall('<[^>]*>',t): t = t.replace(n,'')
+        for n in re.findall(r'<[^>]*>',t): t = t.replace(n,'')
         print('[+] %s'%t)
     else: print('[-] %s'%j['messageData']['popup']['messages'][0]['messageData']['body'])
     
@@ -699,7 +720,7 @@ def kr(args):
     elif not args: return print('[!] antibot active')
     elif len(args) > 1: return huh()
     
-    url = 'https://www.mousehuntgame.com/images/puzzleimage.php?snuid=%s&hash=%s'%(sn_user_id,hash)
+    url = 'https://www.mousehuntgame.com/images/puzzleimage.php?t=%s&user_id=%s'%(int(time.time()*1000),user_id)
     if args[0] == 'url': return print('[=] captcha url: %s'%url)
     elif args[0] == 'show':        
         with open('kingsreward.png','wb') as f: f.write(requests.get(url).content)
