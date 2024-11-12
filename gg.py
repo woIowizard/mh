@@ -1,4 +1,5 @@
-import requests,json,sys
+import json,sys,cloudscraper
+requests = cloudscraper.create_scraper()
 
 def usage():print('usage: %s cookie [integer]\n'%(sys.argv[0].split('\\')[-1])); quit()
 
