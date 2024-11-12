@@ -5,7 +5,7 @@ Autohunt's key functions are sounding the horn, detecting and bypassing MH's ant
 * [antibot](#antibot)
 * [quests](#cycles)
 
-Nov 2024 update: MH updated their cloudflare settings to impede bots/scrapers. The scripts in this repo have been updated to bypass those controls with [cloudscraper](https://pypi.org/project/cloudscraper/).
+Nov 2024 update: MH's cloudflare settings are now configured to impede bots/scrapers. The scripts in this repo have been updated to bypass those controls with [cloudscraper](https://pypi.org/project/cloudscraper/).
 
 <hr>
 <a name="basic"></a> 
