@@ -1,4 +1,5 @@
-import requests,json,sys
+import json,sys,cloudscraper
+requests = cloudscraper.create_scraper()
 
 def usage(): print('''usage: %s cookie [level] [repeat, 0 for inf, s for 1 upgraded; default 1]
 levels\t0: novice to journeyperson, 1: master to lord, 2: baron to duke, 3: grand duke and up\n'''%(sys.argv[0].split('\\')[-1])); quit()
