@@ -11,6 +11,6 @@ Python scripts to help with MH.<br>
 * [toc](docs/toc.md) calculates probabilities for encyclopedias in table of contents.
 * [autoharm](docs/autoharm.md) exploits a (patched) vulnerability in MH to change any user's password.
 
-To run these scripts, you'll need [python-requests](https://pypi.org/project/requests/).
+To run these scripts, you'll need the packages in (requirements.txt)[requirements.txt]. Install with `pip install -r requirements.txt`.
 
 *Using these scripts is against [MH's rules](https://hitgrab.helpshift.com/hc/en/3-mousehunt/faq/44-scripts-auto-clickers-and-software).* The usual disclaimers follow.
