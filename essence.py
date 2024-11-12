@@ -1,4 +1,5 @@
-import requests,json,sys
+import json,sys,cloudscraper
+requests = cloudscraper.create_scraper()
 
 def usage():
     n = sys.argv[0].split('\\')[-1]
