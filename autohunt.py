@@ -18,7 +18,7 @@ requests.get = functools.partial(requests.get,timeout=timeout)
 requests.post = functools.partial(requests.post,timeout=timeout)
 
 ##### ARGUMENT HANDLING #####
-defined_cycles = ['gnawnia','windmill','harbour','mountain','mousoleum','tree','furoma','burglar','digby','toxic','gauntlet','tribal','iceberg','zzt','city','train','fiery','fort','garden','grift','brift','frift','bwrift','vrift','fungal','queso','mp','bb','sos','halloween','lny','bday']
+defined_cycles = ['gnawnia','windmill','harbour','mountain','mousoleum','tree','furoma','burglar','digby','toxic','gauntlet','tribal','iceberg','zzt','city','train','fiery','fort','garden','grift','brift','frift','bwrift','vrift','fungal','queso','mp','bb','dd','halloween','lny','bday']
 
 p = argparse.ArgumentParser()
 p.add_argument('-i',help='horn interval in mins (default %s)'%interval)
@@ -65,7 +65,7 @@ if args.C == 'list':
     ('fungal','fungal cavern quest','access to fungal cavern + hydro/forgotten traps',[('g','farm glowing gruyere'),('b','keep materials for crystal crucible')]),
     ('mp','moussu picchu','access to moussu picchu + shadow/arcane/draconic traps',[('w','aim for wind'),('r','aim for rain'),('d','aim for dragons'),('s','use SB formula for dragonvine'),('g','use GG when not aiming'),('f','use fbf for dragons when not max')]),
     ('bb','bountiful beanstalk quest','access to bountiful beanstalk + physical trap',[('r','r1r instead of farming'),('g','don\'t plant vine'),('l','prioritise farming lavish')]),
-    ('sos','school of sorcery','access to school of sorcery',[('c','always use cc'),('a/s','choose arcane/shadow course'),('m/b','use MM/AA cheese'),('f','sustainable farming')]),
+    ('dd','draconic depths','access to draconic depths',[('r','auto-reinforce cavern'),('g','use gouda for forges')]),
     ('grift','gnawnia rift quest','access to gnawnia rift',[('b','keep 10 seed, grass, and dust'),('r','don\'t use resonator')]),
     ('brift','burroughs rift quest','access to burroughs rift + rift trap',[('t','go for behemoth burroughs'),('b','go for monstrous abomination'),('g','stay in green zone')]),
     ('frift','furoma rift cycle','access to furoma rift + rift trap',[('integer','number of onyx stone to keep'),('c','use enerchi charm outside')]),
@@ -150,10 +150,10 @@ def choose_cycle():
     elif cycle == 'mp': mp()
     elif cycle == 'bb': bb()
     elif cycle == 'sos': sos()
+    elif cycle == 'dd': dd()
     elif cycle == 'bwrift': bwrift()
     elif cycle == 'vrift': vrift()
     elif cycle == 'halloween': halloween()
-    elif cycle == 'xmas': xmas()
     elif cycle == 'lny': lny()
     elif cycle == 'bday': bday()
     
@@ -846,7 +846,7 @@ def city():
     if current_trinket != target_trinket: arm_charm(target_trinket)
     if j['user']['quests']['QuestClawShotCity']['phase'] == 'has_reward': 
         mapid = j['user']['quests']['QuestRelicHunter']['maps'][0]['map_id']
-        requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap.php',{'action':'claim','uh':hash,'map_id':mapid},headers=post_headers,cookies=cookies)
+        requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'claim','uh':hash,'map_id':mapid},headers=post_headers,cookies=cookies)
     if 'wanted_poster_convertible' in chests and j['user']['quests']['QuestClawShotCity']['phase'] in ['has_poster','has_reward']: requests.post('https://www.mousehuntgame.com/managers/ajax/users/useconvertible.php',{'item_type':'wanted_poster_convertible','uh':hash,'item_qty':1},headers=post_headers,cookies=cookies)
     if 'bounty_reward_f_convertible' in chests: requests.post('https://www.mousehuntgame.com/managers/ajax/users/useconvertible.php',{'item_type':'bounty_reward_f_convertible','uh':hash,'item_qty':1},headers=post_headers,cookies=cookies)
     
@@ -1655,7 +1655,7 @@ def bb():
     current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
     
     if 'bountiful_beanstalk' not in allowed_regions: return print('[%s] [%s] no access to bountiful beanstalk. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
-    if 'Physical' not in best_weapons: return print('[%s] [%s] no %s weapon. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),type.lower()))
+    if 'Physical' not in best_weapons: return print('[%s] [%s] no physical weapon. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
     if current_location != 'bountiful_beanstalk': 
         travel('bountiful_beanstalk')
         current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
@@ -1699,7 +1699,35 @@ def bb():
         
     if target_bait not in baits: target_bait = 'gouda_cheese'
     if current_bait != target_bait: arm_bait(target_bait)
-     
+
+def dd():
+    current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
+    
+    if 'draconic_depths' not in allowed_regions: return print('[%s] [%s] no access to draconic depths. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
+    if 'Draconic' not in best_weapons: return print('[%s] [%s] no draconic weapon. hunting normally'%(datetime.datetime.now().replace(microsecond=0),cycle.upper()))
+    if current_location != 'draconic_depths': 
+        travel('draconic_depths')
+        current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
+        
+    best_base = 'valour_rift_prestige_base'
+    if current_base != best_base: arm_base(best_base)
+    if current_weapon != best_weapons['Draconic']: arm_weapon(best_weapons['Draconic'])
+    if 'gouda_cheese' not in baits or baits['gouda_cheese'] < 100: buy('gouda_cheese',100)
+    bc = {'fire':'fiery_fontina_cheese','ice':'icy_isabirra_cheese','poison':'poisonous_provolone_cheese'}
+    if j['user']['quests']['QuestDraconicDepths']['in_cavern']: 
+        hr = j['user']['quests']['QuestDraconicDepths']['cavern']['hunts_remaining']
+        t = j['user']['quests']['QuestDraconicDepths']['cavern']['category']
+        l = j['user']['quests']['QuestDraconicDepths']['duplicator_chest']['num_total_items']
+        if hr<10 and 'r' in args.z: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/draconic_depths.php',{'sn':'Hitgrab','hg_is_ajax':'1','action':'reinforce_cavern','reinforce_amount':"%s"%(25-hr),'uh':hash},cookies=cookies,headers=post_headers);hr=25
+        target_bait = bc[t] if t in bc else 'elemental_emmental_cheese'
+        if target_bait not in baits: target_bait = 'gouda_cheese'
+        print('[%s] [%s] %s cavern. loot: %s, hunts: %s/25, %s: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),t,l,hr,target_bait.replace('_cheese',' ').replace('_',' ').strip(),baits[target_bait]))
+    else:
+        target_bait = bc[j['user']['quests']['QuestDraconicDepths']['crucible_forge']['crucibles'][0]['type']] if len(set([c['type'] for c in j['user']['quests']['QuestDraconicDepths']['crucible_forge']['crucibles']]))==1 and bc[j['user']['quests']['QuestDraconicDepths']['crucible_forge']['crucibles'][0]['type']] in baits and 'g' not in args.z else 'gouda_cheese'
+        print('[%s] [%s] forges: %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),'/'.join('%s %s'%(c['type'],c['progress']) for c in j['user']['quests']['QuestDraconicDepths']['crucible_forge']['crucibles'])))
+    if (j['user']['quests']['QuestDraconicDepths']['in_cavern'] and (l<730 or target_bait=='elemental_emmental_cheese'))!=j['user']['quests']['QuestDraconicDepths']['is_fuel_enabled']: requests.post('https://www.mousehuntgame.com/managers/ajax/environment/draconic_depths.php',{'sn':'Hitgrab','hg_is_ajax':'1','action':'toggle_fuel','uh':hash},cookies=cookies,headers=post_headers)
+    if current_bait != target_bait: arm_bait(target_bait)
+
 def halloween(loop_counter=0):
     current_location,current_base,current_weapon,current_bait,current_trinket,baits,crafts,stats,trinkets,potions,bases,weapons,chests,best_weapons,best_base,best_weapon,j = prologue()
         
@@ -1788,7 +1816,7 @@ def bday(loop_counter=0):
     
     if 't' in args.z and 'QuestRelicHunter' in j['user']['quests'] and 'maps' in j['user']['quests']['QuestRelicHunter'] and [m for m in j['user']['quests']['QuestRelicHunter']['maps'] if m['map_class']=='event']:
         mid = [m for m in j['user']['quests']['QuestRelicHunter']['maps'] if m['map_class']=='event'][0]['map_id']
-        mts = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap.php',{'action':'map_info','uh':hash,'map_id':mid},cookies=cookies,headers=post_headers).text)['treasure_map']
+        mts = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'map_info','uh':hash,'map_id':mid},cookies=cookies,headers=post_headers).text)['treasure_map']
         mts = [m['type'] for m in mts['goals']['mouse'] if m['unique_id'] not in [m for p in mts['hunters'] for m in p['completed_goal_ids']['mouse']]]
         if mts:
             d = {'p':['time_punk','time_tailor','time_thief','reality_restitch','time_plumber'],'m':['force_fighter_green','force_fighter_red','force_fighter_pink','force_fighter_blue','force_fighter_yellow','super_fighterbot_megasupreme'],'b':['para_para_dancer','breakdancer','dance_boss','dance_party','fromager_mouse'],'q':['cupcake_camo','cupcake_candle_thief','cupcake_runner','cupcake_cutie','sprinkley_sweet']}
@@ -1829,7 +1857,7 @@ def bday(loop_counter=0):
     if target_trinket != current_trinket: arm_charm(target_trinket if target_trinket else 'disarm')
         
     print('[%s] [%s] pump: %s/%s (%s). BAITS: %s. %s'%(datetime.datetime.now().replace(microsecond=0),cycle.upper(),c,f,'%s hunts left'%h if h else 'vincent',', '.join('%s%s: %s'%(b[0],'*' if target_bait == b else '',baits[b] if b in baits else 0) for b in ['coggy_colby_cheese','speed_coggy_colby_cheese']),'STATS: %s'%', '.join('%s%s: %s'%(c.replace('birthday_factory_','')[0],'*' if c.replace('birthday_factory_','')[0] == r[0] else '',stats[c] if c in stats else 0) for c in ['birthday_factory_break_room_stat_item','birthday_factory_mixing_room_stat_item','birthday_factory_pumping_room_stat_item','birthday_factory_quality_assurance_room_stat_item'])))
-    
+        
 ##### HORN #####
 def status_check():
     global hash,allowed_regions,antibot_triggered,lpt,user_id,lrje
@@ -1902,8 +1930,6 @@ def horn():
         try:
             if antibot_triggered or args.a:
                 d = {'v':3,'client_id':'Cordova:iOS','client_version':'1.170.0','last_passiveturn_timestamp':lpt,'login_token':cookie}
-                r = requests.post('https://www.mousehuntgame.com/api/action/turn/me',d,headers=api_headers).text
-                print(r);quit()
                 j = json.loads(requests.post('https://www.mousehuntgame.com/api/action/turn/me',d,headers=api_headers).text)
                 hash,user_id,success,wait_time,lpt,gold,have_bait = j['user']['uh'],j['user']['user_id'],j['success'],j['user']['next_activeturn_seconds'],j['user']['last_passiveturn_timestamp'],j['user']['gold'],j['user']['trap']['bait_id']
             else:
@@ -1999,10 +2025,12 @@ def antibot():
 initial_wait = 0 if args.a else status_check()
 if initial_wait > 60: choose_cycle()
 wait(max(float((initial_wait+1)/60),float(args.w if args.w else 0)/60),norandom=True)
+errors=0
 while 1:
+    if errors >= max_fail: print('[%s] too many fails. quitting!'%(datetime.datetime.now().replace(microsecond=0)));quit()
     if random.random() >= miss_chance or horns==0: 
-        try: horns += horn()
-        except Exception as e: print('[%s] error: %s'%(datetime.datetime.now().replace(microsecond=0),e));continue
+        try: horns += horn();errors=0
+        except Exception as e: print('[%s] error: %s'%(datetime.datetime.now().replace(microsecond=0),e));errors+=1;continue
         wait(interval)
     else: 
         print('[%s] giving this one a miss'%(datetime.datetime.now().replace(microsecond=0)))
