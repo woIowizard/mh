@@ -142,6 +142,15 @@ kr\t\t\tcheck antibot status
 kr url\t\t\tdisplay captcha url
 kr show\t\t\tdownload and show captcha image
 kr [code]\t\tsolve captcha
+
+========== MAPS ==========
+map\t\t\tcurrent map info
+map e\t\t\tevent map info
+map leave\t\tleave treasure map
+map e leave\t\tleave event map
+map inv\t\t\tshow map invites
+map #\t\t\taccept invite # (0 if just one invite)
+map add #\t\tinvite user to map by id
 '''
 
     def proc(cmd):
@@ -157,7 +166,7 @@ kr [code]\t\tsolve captcha
             hash,user,password,cookie = '','','',''
             return print('[+] cookie removed from current console session')
         elif cmd == 'exit' or cmd == 'quit': exit_mhconsole()
-        elif cmd in ['horn','info','sleep','arm','move','buy','list','stat','add','del','reset','show','run','hammer','chest','pot','kr','mp']: pass
+        elif cmd in ['horn','info','sleep','arm','move','buy','list','stat','add','del','reset','show','run','hammer','chest','pot','kr','mp','map']: pass
         else: return huh()
         
         content = login_cookie()
@@ -171,6 +180,7 @@ kr [code]\t\tsolve captcha
         if cmd == 'horn': horn(content)
         elif cmd == 'sleep': wait(content)
         elif cmd == 'info': info()
+        elif cmd == 'map': map(content,args)
         elif cmd == 'move': move(args)
         elif cmd == 'arm': arm(args)
         elif cmd == 'buy': buy(args)
@@ -390,6 +400,55 @@ def buy(args):
                 return 0
         print('item not found in stores')
     else: huh()
+
+def map(content,args):
+    try: 
+        if args: 
+            assert len(args)==1 or (args[0]=='add' and len(args)==2)or args==['e','leave']
+            if args[0] not in ['inv','e','leave','add']: mid=int(args[0])
+    except: return huh()
+    om = len(content['user']['maps'])
+    if args and args[0] not in ['e','leave','add']:
+        try: invs = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'get_received_invites','uh':hash,'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['treasure_map_invites'];assert len(invs)
+        except: return print('[-] no invites')
+        if args[0]=='0':
+            if len(invs)==1: mid = invs[0]['map_id']
+            else: print('[=] more than one inv found\n');args[0]=='inv'
+        if args[0]=='inv': 
+            print('MAP ID\t\tOWNER\t\t\tTYPE')
+            for i in invs: print('{0:<8}\t{1:<15}\t\t{2}'.format(i['map_id'],i['owner_name'],i['map_name']))
+            return print('')
+        if om: return print('[-] already on a map')
+        if mid not in [i['map_id'] for i in invs]: return print('[-] invite not found')
+        try: assert json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'accept_invite','uh':hash,'map_id':mid,'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['success']; print('[+] accepted invite')
+        except: return print('[-] something went wrong')
+    else:
+        try:
+            t = [k for k in content['user']['maps'].keys()][0] if om==1 else 'event' if args and args[0]=='e' else 'treasure'
+            mid = content['user']['maps'][t]['id']
+        except: return print('[-] no map found')
+    if args and args[0]=='add':
+        try: 
+            assert int(args[1])>0
+            usr = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/pages/friends.php',{'action':'community_search_by_id','uh':hash,'user_id':args[1],'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['friend']
+        except: return print('[-] user not found')
+        try:
+            assert json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'send_invites','uh':hash,'map_id':mid,'snuids[]':usr['sn_user_id'],'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['success']
+            return print('[+] invited %s'%usr['name'])
+        except: return print('[+] error while inviting')
+    if args and args[-1] == 'leave': 
+        try: assert json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'claim' if content['user']['maps'][t]['is_complete'] else 'discard','uh':hash,'map_id':mid,'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['success']; return print('[+] map left')
+        except: return print('[-] something went wrong')
+    mts = json.loads(requests.post('https://www.mousehuntgame.com/managers/ajax/users/treasuremap_v2.php',{'action':'map_info','uh':hash,'map_id':mid,'sn':'Hitgrab','hg_is_ajax':'1'},cookies=cookies,headers=post_headers).text)['treasure_map']
+    cm = [m for p in mts['hunters'] for m in p['completed_goal_ids']['mouse']]
+    mm = [m for p in mts['hunters'] for m in p['completed_goal_ids']['mouse'] if p['user_id']==content['user']['user_id']]
+    am = mts['goals']['mouse']
+    mm = [m['type'] for m in am if m['unique_id'] in mm]
+    ml = [m for m in am if m['unique_id'] not in cm]
+    mlh = [m['type'] for m in ml if content['user']['environment_id'] in m['environment_ids']]
+    mlo = [m['type'] for m in ml if content['user']['environment_id'] not in m['environment_ids']]
+    
+    return print('\nmap:\t\t%s\nmice caught:\t%s/%s\n\ncaught by me: %s\n%s\n\nmice left here: %s\n%s\n\nmice left elsewhere: %s\n%s'%(mts['name'],len(cm),len(am),len(mm),', '.join(mm),len(mlh),', '.join(mlh),len(mlo),', '.join(mlo)))
 
 def craft(cmd,args): 
     global table
